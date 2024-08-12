@@ -1,0 +1,147 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+{% block content %}
+<h1>Dashboard</h1>
+<div class="row">
+  {% for status, tasks in task_groups.items %}
+    <div class="col-md-4">
+      <h3>{{ status }}</h3>
+      <ul id="{{ status }}-tasks" class="list-group">
+        {% for task in tasks %}
+          <li class="list-group-item" data-task-id="{{ task.pk }}" data-task-status="{{ status }}">
+            {{ task.title }}
+            <span class="badge badge-primary badge-pill">{{ task.get_priority_display }}</span>
+          </li>
+        {% empty %}
+          <li class="list-group-item">No tasks</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endfor %}
+</div>
+
+<div class="form-group">
+    <label for="filterStatus">Filter by Status:</label>
+    <select id="filterStatus" class="form-control">
+      <option value="">All</option>
+      <option value="TODO">To Do</option>
+      <option value="INPROGRESS">In Progress</option>
+      <option value="DONE">Done</option>
+    </select>
+  </div>
+  
+  <div class="form-group">
+    <label for="filterPriority">Filter by Priority:</label>
+    <select id="filterPriority" class="form-control">
+      <option value="">All</option>
+      <option value="LOW">Low</option>
+      <option value="MEDIUM">Medium</option>
+      <option value="HIGH">High</option>
+    </select>
+  </div>
+  
+  <div class="form-group">
+    <label for="filterAssignee">Filter by Assignee:</label>
+    <select id="filterAssignee" class="form-control">
+      <option value="">All</option>
+      {% for user in users %}
+        <option value="{{ user.id }}">{{ user.username }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  
+  <div class="row">
+    <div id="taskList" class="col-md-12">
+    </div>
+  </div>
+  
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  
+  <script>
+    $(function() {
+      $('.list-group').sortable({
+        connectWith: '.list-group',
+        update: function(event, ui) {
+          var status = $(this).attr('id').split('-')[0];
+          var taskId = ui.item.data('task-id');
+
+          $.ajax({
+            url: "{% url 'update_task_status' %}",
+            type: 'POST',
+            data: {
+              'task_id': taskId,
+              'status': status,
+              'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+              console.log('Status updated successfully');
+            },
+            error: function() {
+              alert('Error occurred while updating status.');
+            }
+          });
+        }
+      }).disableSelection();
+    });
+
+    $(document).ready(function() {
+      function loadTasks() {
+        var status = $('#filterStatus').val();
+        var priority = $('#filterPriority').val();
+        var assignee = $('#filterAssignee').val();
+        
+        $.ajax({
+          url: "{% url 'filter_tasks' %}",
+          type: 'GET',
+          data: {
+            'status': status,
+            'priority': priority,
+            'assignee': assignee
+          },
+          success: function(response) {
+            $('#taskList').html(response.html);
+          }
+        });
+      }
+
+      $('#filterStatus, #filterPriority, #filterAssignee').change(function() {
+        loadTasks();
+      });
+
+      loadTasks();
+    });
+  </script>
+  
+  <style>
+    .task-board {
+      display: flex;
+      justify-content: space-between;
+    }
+    .task-column {
+      width: 30%;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 10px;
+      background: #f9f9f9;
+    }
+    .task-column h3 {
+      margin-top: 0;
+    }
+    .task-item {
+      list-style: none;
+      margin: 5px 0;
+      padding: 10px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .task-placeholder {
+      background: #eee;
+      border: 1px dashed #bbb;
+      height: 40px;
+    }
+  </style>

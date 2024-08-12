@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="en">
+{% block content %}
+  <h2>Are you sure you want to delete "{{ project.name }}"?</h2>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit">Confirm</button>
+    <a href="{% url 'project_list' %}">Cancel</a>
+  </form>
+{% endblock %}

@@ -1,0 +1,76 @@
+<!-- aj/templates/task_form.html -->
+
+{% extends "base_generic.html" %}
+
+{% block title %}Edit Task{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <h2>Edit Task</h2>
+    <form id="taskForm" method="post" action="{% url 'task_edit' pk=task.pk %}">
+      {% csrf_token %}
+      <div class="form-group">
+        {{ form.title.label_tag }} 
+        {{ form.title|add_class:"form-control" }}
+        <div class="invalid-feedback">Please enter a task title.</div>
+      </div>
+      <div class="form-group">
+        {{ form.description.label_tag }} 
+        {{ form.description|add_class:"form-control" }}
+        <div class="invalid-feedback">Please enter a task description.</div>
+      </div>
+      <div class="form-group">
+        {{ form.due_date.label_tag }} 
+        {{ form.due_date|add_class:"form-control" }}
+        <div class="invalid-feedback">Please enter a valid due date.</div>
+      </div>
+      <button type="submit" class="btn btn-primary">Save changes</button>
+    </form>
+  </div>
+
+  <script>
+    $(document).ready(function() {
+      $('#taskForm').on('submit', function(event) {
+        event.preventDefault();
+
+        // Clear previous validation states
+        $('.form-control').removeClass('is-invalid');
+
+        var isValid = true;
+        
+        // Validate title
+        if ($('#id_title').val().trim() === '') {
+          $('#id_title').addClass('is-invalid');
+          isValid = false;
+        }
+        
+        // Validate description
+        if ($('#id_description').val().trim() === '') {
+          $('#id_description').addClass('is-invalid');
+          isValid = false;
+        }
+        
+        // Validate due date
+        if ($('#id_due_date').val().trim() === '') {
+          $('#id_due_date').addClass('is-invalid');
+          isValid = false;
+        }
+
+        if (isValid) {
+          // Form is valid, submit via AJAX
+          $.ajax({
+            url: $(this).attr('action'),
+            type: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+              window.location.href = "{% url 'task_detail' pk=task.pk %}";
+            },
+            error: function() {
+              alert('Error occurred while saving task.');
+            }
+          });
+        }
+      });
+    });
+  </script>
+{% endblock %}

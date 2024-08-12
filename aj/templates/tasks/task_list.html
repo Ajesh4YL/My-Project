@@ -1,0 +1,16 @@
+<!-- aj/templates/task_list.html -->
+
+<ul class="list-group">
+    {% for task in tasks %}
+      <li class="list-group-item">
+        <h5>{{ task.title }}</h5>
+        <p>{{ task.description|slice:":100" }}...</p>
+        <p><small class="text-muted">Status: {{ task.get_status_display }}</small></p>
+        <p><small class="text-muted">Due Date: {{ task.due_date }}</small></p>
+        <a href="{% url 'task_detail' pk=task.pk %}" class="btn btn-info">View Task</a>
+      </li>
+    {% empty %}
+      <li class="list-group-item">No tasks found.</li>
+    {% endfor %}
+  </ul>
+  

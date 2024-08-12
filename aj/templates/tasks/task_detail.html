@@ -1,0 +1,53 @@
+{% extends "base_generic.html" %}
+
+{% block title %}{{ task.title }}{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <div class="card-header">
+      <h2>{{ task.title }}</h2>
+    </div>
+    <div class="card-body">
+      <p>{{ task.description }}</p>
+      <p><strong>Status:</strong> {{ task.get_status_display }}</p>
+      <p><strong>Priority:</strong> {{ task.get_priority_display }}</p>
+      <p><strong>Due Date:</strong> {{ task.due_date }}</p>
+      <p><strong>Assigned To:</strong>
+        <select id="assignTo" class="form-control">
+          <option value="">-- Select User --</option>
+          {% for user in users %}
+            <option value="{{ user.id }}" {% if task.assigned_to == user %}selected{% endif %}>{{ user.username }}</option>
+          {% endfor %}
+        </select>
+      </p>
+      {% if user.has_perm('aj.can_edit_task', task) %}
+        <a href="{% url 'task_edit' pk=task.pk %}" class="btn btn-primary">Edit Task</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    $(document).ready(function() {
+      $('#assignTo').change(function() {
+        var userId = $(this).val();
+        var taskId = '{{ task.pk }}';
+
+        $.ajax({
+          url: "{% url 'update_task_assignment' %}",
+          type: 'POST',
+          data: {
+            'task_id': taskId,
+            'user_id': userId,
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+          },
+          success: function(response) {
+            console.log('Task assigned successfully');
+          },
+          error: function() {
+            alert('Error occurred while assigning task.');
+          }
+        });
+      });
+    });
+  </script>
+{% endblock %}
